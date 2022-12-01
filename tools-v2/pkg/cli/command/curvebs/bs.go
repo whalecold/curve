@@ -23,12 +23,14 @@
 package curvebs
 
 import (
+	"github.com/spf13/cobra"
+
 	basecmd "github.com/opencurve/curve/tools-v2/pkg/cli/command"
 	"github.com/opencurve/curve/tools-v2/pkg/cli/command/curvebs/delete"
 	"github.com/opencurve/curve/tools-v2/pkg/cli/command/curvebs/list"
+	"github.com/opencurve/curve/tools-v2/pkg/cli/command/curvebs/peer"
 	"github.com/opencurve/curve/tools-v2/pkg/cli/command/curvebs/query"
 	"github.com/opencurve/curve/tools-v2/pkg/cli/command/curvebs/status"
-	"github.com/spf13/cobra"
 )
 
 type CurveBsCommand struct {
@@ -43,6 +45,7 @@ func (bsCmd *CurveBsCommand) AddSubCommands() {
 		query.NewQueryCommand(),
 		status.NewStatusCommand(),
 		delete.NewDeleteCommand(),
+		peer.NewCommand(),
 	)
 }
 
