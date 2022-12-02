@@ -40,7 +40,7 @@ import (
 )
 
 const (
-	resetExample = `$ curve bs peer remove --logicalpoolid=1 --copysetid=10001 --peer=127.0.0.1:8080:0 
+	removeExample = `$ curve bs peer remove --logicalpoolid=1 --copysetid=10001 --peer=127.0.0.1:8080:0 
  --curconf=127.0.0.1:8080:0,127.0.0.1:8081:1,127.0.0.1:8082:2 --rpcretrytimes=1 --rpctimeout=10s`
 )
 
@@ -85,9 +85,9 @@ var _ basecmd.FinalCurveCmdFunc = (*Command)(nil) // check interface
 func NewCommand() *cobra.Command {
 	cCmd := &Command{
 		FinalCurveCmd: basecmd.FinalCurveCmd{
-			Use:     "reset",
+			Use:     "remove",
 			Short:   "remove the peer from the copyset",
-			Example: resetExample,
+			Example: removeExample,
 		},
 	}
 	basecmd.NewFinalCurveCli(&cCmd.FinalCurveCmd, cCmd)
@@ -149,6 +149,8 @@ func (cCmd *Command) RunCommand(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	return nil
 
 	// 2. remove peer
 	err = cCmd.execRemovePeer(leader)

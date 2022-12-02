@@ -35,6 +35,7 @@ import (
 	"github.com/opencurve/curve/tools-v2/proto/proto/cli2"
 	common "github.com/opencurve/curve/tools-v2/proto/proto/common"
 	"google.golang.org/grpc"
+	"log"
 )
 
 // LeaderRpc the rpc client for the rpc function GetLeader
@@ -108,7 +109,6 @@ func GetLeader(logicalPoolID, copysetID uint32, conf Configuration, opts Options
 	if len(conf.Peers) == 0 {
 		return nil, errors.New("empty group configuration")
 	}
-
 	for _, peer := range conf.Peers {
 		rpcCli := &LeaderRpc{
 			Request: &cli2.GetLeaderRequest2{
@@ -118,6 +118,7 @@ func GetLeader(logicalPoolID, copysetID uint32, conf Configuration, opts Options
 			},
 			Info: basecmd.NewRpc([]string{peer.GetAddress()}, opts.Timeout, opts.RetryTimes, "GetLeader"),
 		}
+		log.Println("pool:", logicalPoolID, "copyset: ", copysetID, "peer: ", peer)
 		response, errCmd := basecmd.GetRpcResponse(rpcCli.Info, rpcCli)
 		if errCmd.TypeCode() != cmderror.CODE_SUCCESS {
 			fmt.Printf("failed to acquire leader peer info %s error : %s", peer.GetAddress(), errCmd.Message)
