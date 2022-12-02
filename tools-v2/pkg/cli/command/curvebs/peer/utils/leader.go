@@ -32,24 +32,24 @@ import (
 
 	cmderror "github.com/opencurve/curve/tools-v2/internal/error"
 	basecmd "github.com/opencurve/curve/tools-v2/pkg/cli/command"
-	"github.com/opencurve/curve/tools-v2/proto/proto/cli2"
 	common "github.com/opencurve/curve/tools-v2/proto/proto/common"
 	"google.golang.org/grpc"
 	"log"
+	"github.com/opencurve/curve/tools-v2/proto/proto/cli"
 )
 
 // LeaderRpc the rpc client for the rpc function GetLeader
 type LeaderRpc struct {
 	Info    *basecmd.Rpc
-	Request *cli2.GetLeaderRequest2
-	Cli     cli2.CliService2Client
+	Request *cli.GetLeaderRequest
+	Cli     cli.CliServiceClient
 }
 
 var _ basecmd.RpcFunc = (*LeaderRpc)(nil) // check interface
 
 // NewRpcClient ...
 func (ufRp *LeaderRpc) NewRpcClient(cc grpc.ClientConnInterface) {
-	ufRp.Cli = cli2.NewCliService2Client(cc)
+	ufRp.Cli = cli.NewCliServiceClient(cc)
 }
 
 // Stub_Func ...
@@ -110,11 +110,12 @@ func GetLeader(logicalPoolID, copysetID uint32, conf Configuration, opts Options
 		return nil, errors.New("empty group configuration")
 	}
 	for _, peer := range conf.Peers {
+		p := "0"
 		rpcCli := &LeaderRpc{
-			Request: &cli2.GetLeaderRequest2{
+			Request: &cli.GetLeaderRequest{
 				LogicPoolId: &logicalPoolID,
 				CopysetId:   &copysetID,
-				Peer:        peer,
+				PeerId:      &p,
 			},
 			Info: basecmd.NewRpc([]string{peer.GetAddress()}, opts.Timeout, opts.RetryTimes, "GetLeader"),
 		}
@@ -124,13 +125,14 @@ func GetLeader(logicalPoolID, copysetID uint32, conf Configuration, opts Options
 			fmt.Printf("failed to acquire leader peer info %s error : %s", peer.GetAddress(), errCmd.Message)
 			continue
 		}
-		resp, ok := response.(*cli2.GetLeaderResponse2)
+		resp, ok := response.(*cli.GetLeaderResponse)
 		if !ok {
 			fmt.Printf("error type interface when acquire leader peer info %s", peer.GetAddress())
 			continue
 		}
-		if resp.Leader != nil {
-			return resp.Leader, nil
+		if resp.LeaderId != nil {
+			fmt.Println("id ", *resp.LeaderId)
+			return nil, nil
 		}
 	}
 	return nil, fmt.Errorf("failed to acquire leader peer info")
