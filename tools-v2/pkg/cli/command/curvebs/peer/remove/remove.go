@@ -35,8 +35,8 @@ import (
 	utils2 "github.com/opencurve/curve/tools-v2/pkg/cli/command/curvebs/peer/utils"
 	"github.com/opencurve/curve/tools-v2/pkg/config"
 	"github.com/opencurve/curve/tools-v2/pkg/output"
-	"github.com/opencurve/curve/tools-v2/proto/proto/cli2"
 	"github.com/opencurve/curve/tools-v2/proto/proto/common"
+	"github.com/opencurve/curve/tools-v2/proto/proto/cli"
 )
 
 const (
@@ -47,12 +47,12 @@ const (
 // RPCClient the rpc client for the rpc function RemovePeer
 type RPCClient struct {
 	Info    *basecmd.Rpc
-	Request *cli2.RemovePeerRequest2
-	cli     cli2.CliService2Client
+	Request *cli.RemovePeerRequest
+	cli     cli.CliServiceClient
 }
 
 func (rpp *RPCClient) NewRpcClient(cc grpc.ClientConnInterface) {
-	rpp.cli = cli2.NewCliService2Client(cc)
+	rpp.cli = cli.NewCliServiceClient(cc)
 }
 
 func (rpp *RPCClient) Stub_Func(ctx context.Context) (interface{}, error) {
@@ -78,8 +78,6 @@ type Command struct {
 	// result data
 	leaderErrorMessage  string
 	copysetErrorMessage string
-	oldPeers            []*common.Peer
-	newPeers            []*common.Peer
 }
 
 var _ basecmd.FinalCurveCmdFunc = (*Command)(nil) // check interface
@@ -194,25 +192,25 @@ func (cCmd *Command) execRemovePeer(leader *common.Peer) error {
 	if err != nil {
 		return err
 	}
-	cli := &RPCClient{
+	leaderID := leader.GetAddress()
+	peerID := fmt.Sprintf("%s:%v", cCmd.removePeer.GetAddress(), cCmd.removePeer.GetId())
+	rpcCli := &RPCClient{
 		Info: basecmd.NewRpc([]string{peer.GetAddress()}, cCmd.opts.Timeout, cCmd.opts.RetryTimes, "RemovePeer"),
-		Request: &cli2.RemovePeerRequest2{
+		Request: &cli.RemovePeerRequest{
 			LogicPoolId: &cCmd.logicalPoolID,
 			CopysetId:   &cCmd.copysetID,
-			Leader:      peer,
-			RemovePeer:  cCmd.removePeer,
+			LeaderId:    &leaderID,
+			PeerId:      &peerID,
 		},
 	}
 
-	response, errCmd := basecmd.GetRpcResponse(cli.Info, cli)
+	response, errCmd := basecmd.GetRpcResponse(rpcCli.Info, rpcCli)
 	if errCmd.TypeCode() != cmderror.CODE_SUCCESS {
 		return errors.New("failed to remove the peer error:" + errCmd.Message)
 	}
-	resp, ok := response.(*cli2.RemovePeerResponse2)
+	_, ok := response.(*cli.RemovePeerResponse)
 	if !ok {
 		return errors.New("error type interface when remove peer info")
 	}
-	cCmd.oldPeers = resp.OldPeers
-	cCmd.newPeers = resp.NewPeers
 	return nil
 }
