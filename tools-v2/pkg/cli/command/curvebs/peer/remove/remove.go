@@ -74,10 +74,6 @@ type Command struct {
 	removePeer *common.Peer
 
 	removeCopySet bool
-
-	// result data
-	leaderErrorMessage  string
-	copysetErrorMessage string
 }
 
 var _ basecmd.FinalCurveCmdFunc = (*Command)(nil) // check interface
@@ -151,9 +147,11 @@ func (cCmd *Command) RunCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	// 2. remove peer
+	prefix := fmt.Sprintf("Remove peer (%s:%v)for copyset(%v,%v) ", cCmd.removePeer.GetAddress(),
+		cCmd.removePeer.GetId(), cCmd.logicalPoolID, cCmd.copysetID)
 	err = cCmd.execRemovePeer(leader)
 	if err != nil {
-		cCmd.leaderErrorMessage = err.Error()
+		fmt.Println(prefix, "fail, detail:", err.Error())
 		return nil
 	}
 
@@ -161,29 +159,17 @@ func (cCmd *Command) RunCommand(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	// 3. delete broken copyset.
+	prefix = fmt.Sprintf("Delete copyset (%v,%v)", cCmd.logicalPoolID, cCmd.copysetID)
 	err = utils2.DeleteBrokenCopyset(cCmd.logicalPoolID, cCmd.copysetID, cCmd.removePeer, cCmd.opts)
 	if err != nil {
-		cCmd.copysetErrorMessage = err.Error()
+		fmt.Println(prefix, "fail, detail:", err.Error())
+		return nil
 	}
+	fmt.Println(prefix, "success")
 	return nil
 }
 
 func (cCmd *Command) ResultPlainOutput() error {
-	prefix := fmt.Sprintf("Remove peer (%s:%v)for copyset(%v,%v) ", cCmd.removePeer.GetAddress(),
-		cCmd.removePeer.GetId(), cCmd.logicalPoolID, cCmd.copysetID)
-
-	if cCmd.leaderErrorMessage != "" {
-		fmt.Println(prefix, "fail, detail:", cCmd.leaderErrorMessage)
-		return nil
-	}
-	fmt.Println(prefix, "success")
-
-	prefix = fmt.Sprintf("Delete copyset (%v,%v)", cCmd.logicalPoolID, cCmd.copysetID)
-	if cCmd.copysetErrorMessage != "" {
-		fmt.Println(prefix, "fail, detail:", cCmd.copysetErrorMessage)
-		return nil
-	}
-	fmt.Println(prefix, "success")
 	return nil
 }
 
@@ -208,9 +194,10 @@ func (cCmd *Command) execRemovePeer(leader *common.Peer) error {
 	if errCmd.TypeCode() != cmderror.CODE_SUCCESS {
 		return errors.New("failed to remove the peer error:" + errCmd.Message)
 	}
-	_, ok := response.(*cli.RemovePeerResponse)
+	resp, ok := response.(*cli.RemovePeerResponse)
 	if !ok {
 		return errors.New("error type interface when remove peer info")
 	}
+	fmt.Printf("configuration of replication group changed from %v to %v", resp.OldPeers, resp.NewPeers)
 	return nil
 }
