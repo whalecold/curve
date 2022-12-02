@@ -154,6 +154,7 @@ func (cCmd *Command) RunCommand(cmd *cobra.Command, args []string) error {
 		fmt.Println(prefix, "fail, detail:", err.Error())
 		return nil
 	}
+	fmt.Println(prefix, "success")
 
 	if !cCmd.removeCopySet {
 		return nil
@@ -198,6 +199,6 @@ func (cCmd *Command) execRemovePeer(leader *common.Peer) error {
 	if !ok {
 		return errors.New("error type interface when remove peer info")
 	}
-	fmt.Printf("configuration of replication group changed from %v to %v", resp.OldPeers, resp.NewPeers)
+	fmt.Printf("configuration of replication group changed from %v to %v\n", resp.OldPeers, resp.NewPeers)
 	return nil
 }
