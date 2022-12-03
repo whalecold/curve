@@ -52,6 +52,8 @@ A tool for CurveFS & CurveBs.
     - [status](#status-1)
       - [staus etcd](#staus-etcd)
       - [staus mds](#staus-mds)
+    - [delete](#delete-1)
+      - [delete peer](#delete-peer)
   - [Comparison of old and new commands](#comparison-of-old-and-new-commands)
     - [curve fs](#curve-fs)
     - [curve bs](#curve-bs)
@@ -955,6 +957,26 @@ Output:
 +-------------------+-------------------+-------------------+----------+
 ```
 
+### delete
+
+#### delete peer
+delete the peer from the copyset
+
+Usage:
+```bash
+curve bs delete peer
+```
+
+Output:
+```bash
++-----------------+-------------------+---------+-------------------------+
+| leader          | peer              | copyset |            RESULT       |
++-----------------+-------------------+---------+-------------------------+
+|127.0.0.1:8201:0 | 127.0.0.1:8200:0  | (1,2)   | success                 |
++-----------------+-------------------+---------+-------------------------+
+```
+
+
 ## Comparison of old and new commands
 
 ### curve fs
@@ -1004,19 +1026,19 @@ Output:
 | list | |
 | seginfo | |
 | delete | |
-| clean-recycle |
+| clean-recycle | |
 | create | |
 | chunk-location | |
 | check-consistency | |
-| remove-peer | |
+| remove-peer | curve bs delete peer |
 | transfer-leader | |
 | reset-peer | |
 | do-snapshot | |
 | do-snapshot-all | |
 | check-chunkserver | |
 | check-copyset | |
-| check-server ||
-| check-operator |
+| check-server | |
+| check-operator | |
 | list-may-broken-vol | |
 | set-copyset-availflag | |
 | update-throttle | |
