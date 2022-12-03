@@ -361,6 +361,16 @@ func GetFlagString(cmd *cobra.Command, flagName string) string {
 	return value
 }
 
+func GetBsFlagBool(cmd *cobra.Command, flagName string) bool {
+	var value bool
+	if cmd.Flag(flagName).Changed {
+		value, _ = cmd.Flags().GetBool(flagName)
+	} else {
+		value = viper.GetBool(BSFLAG2VIPER[flagName])
+	}
+	return value
+}
+
 func GetFlagBool(cmd *cobra.Command, flagName string) bool {
 	var value bool
 	if cmd.Flag(flagName).Changed {

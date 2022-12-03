@@ -55,6 +55,7 @@ const (
 	MAX_CHANNEL_SIZE               = "maxChannelSize"
 	VIPER_GLOBALE_MAX_CHANNEL_SIZE = "global.maxChannelSize"
 	DEFAULT_MAX_CHANNEL_SIZE       = int32(4)
+	DEFAULT_FALSE                  = false
 )
 
 var (
