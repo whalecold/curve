@@ -20,7 +20,7 @@
  * Author: zls1129@gmail.com
  */
 
-package utils
+package peer
 
 import (
 	"context"
@@ -33,7 +33,7 @@ import (
 	cmderror "github.com/opencurve/curve/tools-v2/internal/error"
 	basecmd "github.com/opencurve/curve/tools-v2/pkg/cli/command"
 	"github.com/opencurve/curve/tools-v2/proto/proto/cli2"
-	common "github.com/opencurve/curve/tools-v2/proto/proto/common"
+	"github.com/opencurve/curve/tools-v2/proto/proto/common"
 	"google.golang.org/grpc"
 )
 

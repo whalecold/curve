@@ -52,8 +52,8 @@ A tool for CurveFS & CurveBs.
     - [status](#status-1)
       - [staus etcd](#staus-etcd)
       - [staus mds](#staus-mds)
-    - [peer](#peer)
-      - [remove-peer](#remove-peer)
+    - [delete](#delete-1)
+      - [delete peer](#delete-peer)
   - [Comparison of old and new commands](#comparison-of-old-and-new-commands)
     - [curve fs](#curve-fs)
     - [curve bs](#curve-bs)
@@ -957,19 +957,23 @@ Output:
 +-------------------+-------------------+-------------------+----------+
 ```
 
-#### remove peer
-remove the peer from the copyset
+### delete
+
+#### delete peer
+delete the peer from the copyset
 
 Usage:
 ```bash
-curve bs peer remove
+curve bs delete peer
 ```
 
 Output:
 ```bash
-configuration of replication group changed from [127.0.0.1:8201:0 127.0.0.1:8202:0] to [127.0.0.1:8201:0 127.0.0.1:8202:0]
-Remove peer (127.0.0.1:8200:0)for copyset(1,12)  success
-
++-----------------+-------------------+---------+-------------------------+
+| leader          | peer              | copyset |            RESULT       |
++-----------------+-------------------+---------+-------------------------+
+|127.0.0.1:8201:0 | 127.0.0.1:8200:0  | (1,2)   | success                 |
++-----------------+-------------------+---------+-------------------------+
 ```
 
 
@@ -1003,41 +1007,41 @@ Remove peer (127.0.0.1:8200:0)for copyset(1,12)  success
 
 ### curve bs
 
-|  old   | new                        |
-|  ----  |----------------------------|
+|  old   | new  |
+|  ----  | ----  |
 | curve_ops_tool logical-pool-list | curve bs list logical-pool |
-| curve_ops_tool get -fileName= | curve bs query file -path  |
-| curve_ops_tool etcd-status | curve bs status etcd       |
-| curve_ops_tool mds-status | curve bs status mds        |
-| curve_ops_tool server-list | curve bs list server       |
-| space |                            |
-| status |                            |
-| chunkserver-status |                            |
-| client-status |                            |
-| client-list | curve bs list client       |
-| snapshot-clone-status |                            |
-| copysets-status |                            |
-| chunkserver-list |                            |
-| cluster-status |                            |
-| list |                            |
-| seginfo |                            |
-| delete |                            |
-| clean-recycle |
-| create |                            |
-| chunk-location |                            |
-| check-consistency |                            |
-| remove-peer | curve bs peer remove       |
-| transfer-leader |                            |
-| reset-peer |                            |
-| do-snapshot |                            |
-| do-snapshot-all |                            |
-| check-chunkserver |                            |
-| check-copyset |                            |
-| check-server ||
-| check-operator |
-| list-may-broken-vol |                            |
-| set-copyset-availflag |                            |
-| update-throttle |                            |
-| rapid-leader-schedule |                            |
-| set-scan-state |                            |
-| scan-status |                            |
+| curve_ops_tool get -fileName= | curve bs query file -path |
+| curve_ops_tool etcd-status | curve bs status etcd |
+| curve_ops_tool mds-status | curve bs status mds |
+| curve_ops_tool server-list | curve bs list server |
+| space | |
+| status | |
+| chunkserver-status | |
+| client-status | |
+| client-list | curve bs list client |
+| snapshot-clone-status | |
+| copysets-status | |
+| chunkserver-list | |
+| cluster-status | |
+| list | |
+| seginfo | |
+| delete | |
+| clean-recycle | |
+| create | |
+| chunk-location | |
+| check-consistency | |
+| remove-peer | curve bs delete peer |
+| transfer-leader | |
+| reset-peer | |
+| do-snapshot | |
+| do-snapshot-all | |
+| check-chunkserver | |
+| check-copyset | |
+| check-server | |
+| check-operator | |
+| list-may-broken-vol | |
+| set-copyset-availflag | |
+| update-throttle | |
+| rapid-leader-schedule | |
+| set-scan-state | |
+| scan-status | |

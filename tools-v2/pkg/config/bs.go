@@ -64,7 +64,7 @@ const (
 	VIPER_CURVEBS_REMOVE_COPYSET      = "curvebs.removecopyset"
 	VIPER_CURVEBS_PEER                = "curvebs.peer"
 	CURVEBS_CURRENT_CONFADDRESS       = "curconf"
-	VIPER_CURVEBS_CURRENT_CONFADDRESS = "curvebs.curconf"
+	VIPER_CURVEBS_CURRENT_CONFADDRESS = "curvebs.chunkconf"
 )
 
 var (
@@ -279,4 +279,14 @@ func GetBsMdsAddrSlice(cmd *cobra.Command) ([]string, *cmderror.CmdError) {
 
 func GetBsMdsDummyAddrSlice(cmd *cobra.Command) ([]string, *cmderror.CmdError) {
 	return GetBsAddrSlice(cmd, CURVEBS_MDSDUMMYADDR)
+}
+
+func GetBsFlagBool(cmd *cobra.Command, flagName string) bool {
+	var value bool
+	if cmd.Flag(flagName).Changed {
+		value, _ = cmd.Flags().GetBool(flagName)
+	} else {
+		value = viper.GetBool(BSFLAG2VIPER[flagName])
+	}
+	return value
 }

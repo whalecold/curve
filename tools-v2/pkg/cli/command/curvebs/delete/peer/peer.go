@@ -1,5 +1,4 @@
-/*
- *  Copyright (c) 2022 NetEase Inc.
+/*  Copyright (c) 2022 NetEase Inc.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,7 +19,7 @@
  * Author: zls1129@gmail.com
  */
 
-package remove
+package peer
 
 import (
 	"context"
@@ -31,8 +30,8 @@ import (
 	"google.golang.org/grpc"
 
 	cmderror "github.com/opencurve/curve/tools-v2/internal/error"
+	cobrautil "github.com/opencurve/curve/tools-v2/internal/utils"
 	basecmd "github.com/opencurve/curve/tools-v2/pkg/cli/command"
-	utils2 "github.com/opencurve/curve/tools-v2/pkg/cli/command/curvebs/peer/utils"
 	"github.com/opencurve/curve/tools-v2/pkg/config"
 	"github.com/opencurve/curve/tools-v2/pkg/output"
 	"github.com/opencurve/curve/tools-v2/proto/proto/cli"
@@ -40,7 +39,7 @@ import (
 )
 
 const (
-	removeExample = `$ curve bs peer remove --logicalpoolid=1 --copysetid=10001 --peer=127.0.0.1:8200:0 
+	deleteExample = `$ curve bs delete peer --logicalpoolid=1 --copysetid=10001 --peer=127.0.0.1:8200:0 
  --curconf=127.0.0.1:8200:0,127.0.0.1:8201:1,127.0.0.1:8202:2 --rpcretrytimes=1 --rpctimeout=10s --removecopyset=false`
 )
 
@@ -66,11 +65,11 @@ type Command struct {
 	basecmd.FinalCurveCmd
 
 	// request parameters
-	opts          utils2.Options
+	opts          Options
 	logicalPoolID uint32
 	copysetID     uint32
 
-	conf       utils2.Configuration
+	conf       Configuration
 	removePeer *common.Peer
 
 	removeCopySet bool
@@ -81,9 +80,9 @@ var _ basecmd.FinalCurveCmdFunc = (*Command)(nil) // check interface
 func NewCommand() *cobra.Command {
 	cCmd := &Command{
 		FinalCurveCmd: basecmd.FinalCurveCmd{
-			Use:     "remove",
-			Short:   "remove the peer from the copyset",
-			Example: removeExample,
+			Use:     "peer",
+			Short:   "delete the peer from the copyset",
+			Example: deleteExample,
 		},
 	}
 	basecmd.NewFinalCurveCli(&cCmd.FinalCurveCmd, cCmd)
@@ -103,13 +102,12 @@ func (cCmd *Command) AddFlags() {
 }
 
 func (cCmd *Command) Init(cmd *cobra.Command, args []string) error {
-	cCmd.opts = utils2.Options{}
+	cCmd.opts = Options{}
 
 	var err error
 	cCmd.opts.Timeout = config.GetFlagDuration(cCmd.Cmd, config.RPCTIMEOUT)
 	cCmd.opts.RetryTimes = config.GetFlagInt32(cCmd.Cmd, config.RPCRETRYTIMES)
 	cCmd.removeCopySet = config.GetBsFlagBool(cCmd.Cmd, config.CURVEBS_REMOVE_COPYSET)
-	fmt.Println("flag :", cCmd.removeCopySet)
 
 	cCmd.copysetID, err = config.GetBsFlagUint32(cCmd.Cmd, config.CURVEBS_COPYSET_ID)
 	if err != nil {
@@ -122,7 +120,7 @@ func (cCmd *Command) Init(cmd *cobra.Command, args []string) error {
 
 	// parse config
 	curConf := config.GetBsFlagString(cCmd.Cmd, config.CURVEBS_CURRENT_CONFADDRESS)
-	c, err := utils2.ParseConfiguration(curConf)
+	c, err := ParseConfiguration(curConf)
 	if err != nil {
 		return err
 	}
@@ -130,7 +128,7 @@ func (cCmd *Command) Init(cmd *cobra.Command, args []string) error {
 
 	// parse conf
 	peer := config.GetBsFlagString(cCmd.Cmd, config.CURVEBS_PEER)
-	cCmd.removePeer, err = utils2.ParsePeer(peer)
+	cCmd.removePeer, err = ParsePeer(peer)
 	if err != nil {
 		return err
 	}
@@ -142,43 +140,46 @@ func (cCmd *Command) Print(cmd *cobra.Command, args []string) error {
 }
 
 func (cCmd *Command) RunCommand(cmd *cobra.Command, args []string) error {
-
+	out := make(map[string]string)
+	out[cobrautil.ROW_PEER] = fmt.Sprintf("%s:%d", cCmd.removePeer.GetAddress(), cCmd.removePeer.GetId())
+	out[cobrautil.ROW_COPYSET] = fmt.Sprintf("(%d:%d)", cCmd.logicalPoolID, cCmd.copysetID)
 	// 1. acquire leader peer info.
-	leader, err := utils2.GetLeader(cCmd.logicalPoolID, cCmd.copysetID, cCmd.conf, cCmd.opts)
+	leader, err := GetLeader(cCmd.logicalPoolID, cCmd.copysetID, cCmd.conf, cCmd.opts)
 	if err != nil {
-		return err
-	}
-
-	// 2. remove peer
-	prefix := fmt.Sprintf("Remove peer (%s:%v) form leader (%s) for copyset(%v,%v) ", cCmd.removePeer.GetAddress(),
-		cCmd.removePeer.GetId(), leader.GetAddress(), cCmd.logicalPoolID, cCmd.copysetID)
-	err = cCmd.execRemovePeer(leader)
-	if err != nil {
-		fmt.Println(prefix, "fail, detail:", err.Error())
+		out[cobrautil.ROW_RESULT] = "failed"
+		out[cobrautil.ROW_REASON] = err.Error()
 		return nil
 	}
-	fmt.Println(prefix, "success")
 
+	out[cobrautil.ROW_LEADER] = fmt.Sprintf("%s", leader.GetAddress())
+	// 2. remove peer
+	err = cCmd.execRemovePeer(leader)
+	if err != nil {
+		out[cobrautil.ROW_RESULT] = "failed"
+		out[cobrautil.ROW_REASON] = err.Error()
+		return nil
+	}
+	out[cobrautil.ROW_RESULT] = "success"
+	out[cobrautil.ROW_REASON] = ""
 	if !cCmd.removeCopySet {
 		return nil
 	}
 	// 3. delete broken copyset.
-	prefix = fmt.Sprintf("Delete copyset (%v,%v)", cCmd.logicalPoolID, cCmd.copysetID)
-	err = utils2.DeleteBrokenCopyset(cCmd.logicalPoolID, cCmd.copysetID, cCmd.removePeer, cCmd.opts)
+	err = DeleteBrokenCopyset(cCmd.logicalPoolID, cCmd.copysetID, cCmd.removePeer, cCmd.opts)
 	if err != nil {
-		fmt.Println(prefix, "fail, detail:", err.Error())
-		return nil
+		return err
 	}
-	fmt.Println(prefix, "success")
+	list := cobrautil.Map2List(out, []string{cobrautil.ROW_PEER, cobrautil.ROW_COPYSET, cobrautil.ROW_RESULT, cobrautil.ROW_REASON, cobrautil.ROW_LEADER})
+	cCmd.TableNew.Append(list)
 	return nil
 }
 
 func (cCmd *Command) ResultPlainOutput() error {
-	return nil
+	return output.FinalCmdOutputPlain(&cCmd.FinalCurveCmd)
 }
 
 func (cCmd *Command) execRemovePeer(leader *common.Peer) error {
-	peer, err := utils2.ParsePeer(leader.GetAddress())
+	peer, err := ParsePeer(leader.GetAddress())
 	if err != nil {
 		return err
 	}
