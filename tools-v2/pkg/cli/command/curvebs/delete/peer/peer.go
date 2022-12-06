@@ -104,6 +104,11 @@ func (cCmd *Command) AddFlags() {
 func (cCmd *Command) Init(cmd *cobra.Command, args []string) error {
 	cCmd.opts = Options{}
 
+	cCmd.SetHeader([]string{cobrautil.ROW_LEADER, cobrautil.ROW_PEER, cobrautil.ROW_COPYSET, cobrautil.ROW_RESULT, cobrautil.ROW_REASON})
+	cCmd.TableNew.SetAutoMergeCellsByColumnIndex(cobrautil.GetIndexSlice(
+		cCmd.Header, []string{},
+	))
+
 	var err error
 	cCmd.opts.Timeout = config.GetFlagDuration(cCmd.Cmd, config.RPCTIMEOUT)
 	cCmd.opts.RetryTimes = config.GetFlagInt32(cCmd.Cmd, config.RPCRETRYTIMES)
@@ -143,6 +148,12 @@ func (cCmd *Command) RunCommand(cmd *cobra.Command, args []string) error {
 	out := make(map[string]string)
 	out[cobrautil.ROW_PEER] = fmt.Sprintf("%s:%d", cCmd.removePeer.GetAddress(), cCmd.removePeer.GetId())
 	out[cobrautil.ROW_COPYSET] = fmt.Sprintf("(%d:%d)", cCmd.logicalPoolID, cCmd.copysetID)
+
+	defer func() {
+		list := cobrautil.Map2List(out, cCmd.Header)
+		cCmd.TableNew.Append(list)
+	}()
+
 	// 1. acquire leader peer info.
 	leader, err := GetLeader(cCmd.logicalPoolID, cCmd.copysetID, cCmd.conf, cCmd.opts)
 	if err != nil {
@@ -161,6 +172,7 @@ func (cCmd *Command) RunCommand(cmd *cobra.Command, args []string) error {
 	}
 	out[cobrautil.ROW_RESULT] = "success"
 	out[cobrautil.ROW_REASON] = ""
+
 	if !cCmd.removeCopySet {
 		return nil
 	}
@@ -169,8 +181,6 @@ func (cCmd *Command) RunCommand(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	list := cobrautil.Map2List(out, []string{cobrautil.ROW_PEER, cobrautil.ROW_COPYSET, cobrautil.ROW_RESULT, cobrautil.ROW_REASON, cobrautil.ROW_LEADER})
-	cCmd.TableNew.Append(list)
 	return nil
 }
 

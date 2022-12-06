@@ -30,8 +30,8 @@ func (dCmd *DeleteCommand) AddSubCommands() {
 func NewDeleteCommand() *cobra.Command {
 	dCmd := &DeleteCommand{
 		basecmd.MidCurveCmd{
-			Use:   "list",
-			Short: "list resources in the curvebs",
+			Use:   "delete",
+			Short: "delete resources in the curvebs",
 		},
 	}
 	return basecmd.NewMidCurveCli(&dCmd.MidCurveCmd, dCmd)
