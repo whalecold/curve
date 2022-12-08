@@ -100,7 +100,7 @@ func (cCmd *Command) AddFlags() {
 func (cCmd *Command) Init(cmd *cobra.Command, args []string) error {
 	cCmd.opts = Options{}
 
-	cCmd.SetHeader([]string{cobrautil.ROW_LEADER, cobrautil.ROW_PEER, cobrautil.ROW_COPYSET, cobrautil.ROW_RESULT})
+	cCmd.SetHeader([]string{cobrautil.ROW_LEADER, cobrautil.ROW_PEER, cobrautil.ROW_COPYSET, cobrautil.ROW_RESULT, cobrautil.ROW_REASON})
 	cCmd.TableNew.SetAutoMergeCellsByColumnIndex(cobrautil.GetIndexSlice(
 		cCmd.Header, []string{},
 	))
