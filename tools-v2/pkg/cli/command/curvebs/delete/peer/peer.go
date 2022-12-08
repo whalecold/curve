@@ -164,6 +164,7 @@ func (cCmd *Command) RunCommand(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	out[cobrautil.ROW_RESULT] = "success"
+	out[cobrautil.ROW_REASON] = "null"
 	list := cobrautil.Map2List(out, cCmd.Header)
 	cCmd.TableNew.Append(list)
 	return nil
